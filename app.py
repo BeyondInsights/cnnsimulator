@@ -9,7 +9,7 @@ st.set_page_config(
 )
 
 # ── 1. CUSTOM CSS ──────────────────────────────────────────────────────────────
-with open("assets/custom.css") as f:
+with open("assets/custom.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ── 2. TOP TOOLBAR (BUTTONS + BRANDING) ────────────────────────────────────────
