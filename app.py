@@ -1,37 +1,74 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 from openpyxl import load_workbook
 
-
-# ── 1. PAGE CONFIG & CSS ─────────────────────────────────────────────────────
+# ── 0. PAGE CONFIG ────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="CNN News Subscription Simulator",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# Inject our custom CSS (to tighten spacing, shrink padding, etc.)
+# ── 1. CUSTOM CSS ──────────────────────────────────────────────────────────────
 with open("assets/custom.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-
-# ── 2. “Welcome” HEADER (MOVED UP CLOSER TO TOP) ───────────────────────────────
-col1, col2, col3 = st.columns([1, 6, 1])
-with col2:
-    st.image("assets/logo.png", width=120)  # Your CNN logo (replace if needed)
+# ── 2. TOP TOOLBAR (BUTTONS + BRANDING) ────────────────────────────────────────
+# We place all eight buttons in a styled container at the top
+toolbar_cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 4])
+with toolbar_cols[0]:
+    if st.button("🗑 Clear All", key="btn_clear"):
+        # Reset every product card’s session_state:
+        for i in range(1, 7):
+            st.session_state[f"base_{i}"] = "Select Base Product"
+            st.session_state[f"rf_{i}"] = []
+            st.session_state[f"sf_{i}"] = []
+            st.session_state[f"vert_{i}"] = []
+            st.session_state[f"slider_{i}"] = None
+            st.session_state[f"exclude_{i}"] = False
+        st.experimental_rerun()
+with toolbar_cols[1]:
+    if st.button("📊 Set Report Type", key="btn_report"):
+        st.info("Set Report Type clicked (stub)")
+with toolbar_cols[2]:
+    if st.button("▶️ Run Simulation", key="btn_run"):
+        try:
+            wb = load_workbook("cnn_simulator.xlsx")
+            # … your simulation logic goes here …
+            wb.save("cnn_simulator_out.xlsx")
+            st.success("Simulation complete—download below.")
+            st.download_button("Download Results", "cnn_simulator_out.xlsx", key="btn_dl")
+        except FileNotFoundError:
+            st.error("Error: ‘cnn_simulator.xlsx’ not found.")
+with toolbar_cols[3]:
+    if st.button("👤 Show Profiles", key="btn_profiles"):
+        st.info("Show Profiles clicked (stub)")
+with toolbar_cols[4]:
+    if st.button("🌎 Market Factors", key="btn_market"):
+        st.info("Market Factors clicked (stub)")
+with toolbar_cols[5]:
+    if st.button("ℹ️ About this Model", key="btn_about"):
+        st.info("About this Model clicked (stub)")
+with toolbar_cols[6]:
+    if st.button("🧠 Model Insights", key="btn_insights"):
+        st.info("Model Insights clicked (stub)")
+with toolbar_cols[7]:
+    if st.button("🤖 AI Configurator", key="btn_ai"):
+        st.info("AI Configurator clicked (stub)")
+with toolbar_cols[8]:
+    # Branding: “Powered by BEYOND Insights” with your logo
     st.markdown(
-        "<h2 style='text-align:center; margin-top: 0.25rem;'>"
-        "CNN News Subscription Simulator</h2>",
+        "<div class='branding'>"
+        "<img src='assets/logo.png' class='branding-logo'>"
+        "<span class='branding-text'>Powered by BEYOND Insights</span>"
+        "</div>",
         unsafe_allow_html=True,
     )
+
 st.markdown("---")
 
+# ── 3. DATA FROM NOTES (features, verticals, pricing table) ───────────────────
+# Source: notes.txt :contentReference[oaicite:0]{index=0}
 
-# ── 3. DATA FROM NOTES (features, verticals, pricing) ─────────────────────────
-# Source: notes.txt :contentReference[oaicite:1]{index=1}
-
-# 3a) Reader features (rank order)
 READER_FEATURES = [
     "Podcast Club",
     "CNN Reality Check",
@@ -47,7 +84,6 @@ READER_FEATURES = [
     "CNN You",
 ]
 
-# 3b) Streaming features
 STREAMING_FEATURES = [
     "Personalized Daily Video Briefing",
     "RealTime Fact Checking",
@@ -63,7 +99,6 @@ STREAMING_FEATURES = [
     "Live Text Commentary from CNN",
 ]
 
-# 3c) Verticals (anywhere from 0–3 for Reader/Streaming/All-Access; exactly 1 if Standalone)
 VERTICALS = [
     "CNN Entertainment Tracker",
     "CNN Meditation & Mindfulness",
@@ -77,7 +112,6 @@ VERTICALS = [
     "CNN Home",
 ]
 
-# 3d) Base products
 BASE_PRODUCTS = [
     "Select Base Product",
     "CNN Reader",
@@ -86,15 +120,6 @@ BASE_PRODUCTS = [
     "Standalone Vertical",
 ]
 
-# 3e) Pricing table: (product_key, number_of_verticals) → (min_price, max_price)
-# Source: notes.txt :contentReference[oaicite:2]{index=2}
-#
-#         0 Vert   1 Vert    2 Vert     3 Vert
-# CNN Reader    3.99–14.99  5.49–16.99  6.99–19.49   8.49–21.99
-# CNN Streaming 4.99–16.99  6.49–17.99  7.99–21.49   9.49–24.99
-# CNN All Access5.99–24.99  7.99–25.99  9.99–30.49  11.99–34.99
-# Standalone:    1.99–7.99   (always 1 vertical)
-#
 PRICING_TABLE = {
     ("CNN Reader",       0): (3.99, 14.99),
     ("CNN Reader",       1): (5.49, 16.99),
@@ -108,213 +133,167 @@ PRICING_TABLE = {
     ("CNN All Access",   1): (7.99, 25.99),
     ("CNN All Access",   2): (9.99, 30.49),
     ("CNN All Access",   3): (11.99, 34.99),
-    # Standalone vertical: we force “vertical_count = 1” internally
-    ("Standalone Vertical", 1): (1.99, 7.99),
+    ("Standalone Vertical", 1): (1.99,  7.99),
 }
 
 
-# ── 4. HELPER: GET PRICE RANGE BASED ON (product, #verticals) ──────────────────
 def get_price_range(base_prod: str, selected_verticals: list[str]) -> tuple[float, float]:
-    """
-    Returns (min_price, max_price) based on the selected base product
-    and the number of verticals. If Standalone Vertical, we treat as 1 vertical.
-    """
+    """Return (min_price, max_price) based on base product + # of verticals."""
     if base_prod == "Standalone Vertical":
         key = (base_prod, 1)
     else:
-        # cap at 3 verticals (anything >3 uses the 3-vertical pricing)
         n = min(len(selected_verticals), 3)
         key = (base_prod, n)
+    return PRICING_TABLE.get(key, (0.0, 0.0))
 
-    return PRICING_TABLE.get(key, (0.0, 0.0))  # (0,0) if no valid price (e.g., no base selected)
 
-
-# ── 5. PRODUCT CARDS (SIX SLOTS) ────────────────────────────────────────────────
+# ── 4. SIX PRODUCT CARDS ───────────────────────────────────────────────────────
 total_products = 6
 cols = st.columns(total_products, gap="small")
 
 for idx in range(total_products):
     with cols[idx]:
-        product_slot = idx + 1  # because idx is 0-based, slots are 1-based
+        slot = idx + 1
+        # Checkbox to EXCLUDE this product from the simulation:
+        excluded = st.checkbox(
+            f"Exclude",
+            key=f"exclude_{slot}",
+            label_visibility="collapsed",
+            help="Check to exclude this product from the simulation",
+        )
 
-        # (a) Dropdown to choose base product
+        # Gray‐out overlay if excluded:
+        if excluded:
+            st.markdown(
+                "<div class='overlay'>"
+                "<span class='overlay-text'>EXCLUDED</span>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+        # Base‐product dropdown
         base_selection = st.selectbox(
-            f"",  # hide the label (we’ll show “PRODUCT X” in the header)
+            "",
             options=BASE_PRODUCTS,
             index=0,
-            key=f"base_{product_slot}",
+            key=f"base_{slot}",
             label_visibility="collapsed",
         )
 
-        # (b) Card Header: “PRODUCT 1”, “PRODUCT 2”, etc., turns RED if a valid base is chosen
-        header_color = "#c00" if base_selection != "Select Base Product" else "#e0e0e0"
+        # Card header (bold, colored once a base is selected)
+        if base_selection != "Select Base Product" and not excluded:
+            header_color = "#c00"
+        else:
+            header_color = "#555"  # darker gray for unselected/disabled
         st.markdown(
-            f"<div class='product-header' style='background-color:{header_color}; "
-            "border-radius:5px; text-align:center; color:white;'>"
-            f"PRODUCT {product_slot}</div>",
+            f"<div class='card-header' style='background-color:{header_color};'>"
+            f"PRODUCT {slot}</div>",
             unsafe_allow_html=True,
         )
 
-        # (c) Conditional Feature & Vertical Pickers
+        if excluded or base_selection == "Select Base Product":
+            st.markdown(
+                "<div class='card-body-muted'>"
+                "Select a base product to enable.</div>",
+                unsafe_allow_html=True,
+            )
+            continue  # skip the rest of this card
+
+        # Depending on base_selection, show appropriate feature/vertical pickers:
         if base_selection == "CNN Reader":
-            # Show Reader features:
-            st.markdown("**Reader Features (select any)**")
+            st.markdown("**Reader Features**")
             selected_reader = st.multiselect(
-                "",
+                " ",
                 options=READER_FEATURES,
-                key=f"rf_{product_slot}",
+                key=f"rf_{slot}",
                 label_visibility="collapsed",
             )
-            # No streaming features for CNN Reader
             selected_streaming = []
-
-            # Vertical picker (0–3):
             st.markdown("**Verticals (0–3)**")
             selected_verticals = st.multiselect(
-                "",
+                " ",
                 options=VERTICALS,
-                key=f"vert_{product_slot}",
+                key=f"vert_{slot}",
                 label_visibility="collapsed",
             )
 
         elif base_selection == "CNN Streaming":
-            # Show Streaming features:
-            st.markdown("**Streaming Features (select any)**")
+            st.markdown("**Streaming Features**")
             selected_streaming = st.multiselect(
-                "",
+                " ",
                 options=STREAMING_FEATURES,
-                key=f"sf_{product_slot}",
+                key=f"sf_{slot}",
                 label_visibility="collapsed",
             )
-            # No reader features for streaming
             selected_reader = []
-
-            # Vertical picker (0–3):
             st.markdown("**Verticals (0–3)**")
             selected_verticals = st.multiselect(
-                "",
+                " ",
                 options=VERTICALS,
-                key=f"vert_{product_slot}",
+                key=f"vert_{slot}",
                 label_visibility="collapsed",
             )
 
         elif base_selection == "CNN All Access":
-            # Show both Reader and Streaming feature lists:
-            st.markdown("**Reader Features (select any)**")
+            st.markdown("**Reader Features**")
             selected_reader = st.multiselect(
-                "",
+                " ",
                 options=READER_FEATURES,
-                key=f"rf_{product_slot}",
+                key=f"rf_{slot}",
                 label_visibility="collapsed",
             )
-            st.markdown("**Streaming Features (select any)**")
+            st.markdown("**Streaming Features**")
             selected_streaming = st.multiselect(
-                "",
+                " ",
                 options=STREAMING_FEATURES,
-                key=f"sf_{product_slot}",
+                key=f"sf_{slot}",
                 label_visibility="collapsed",
             )
-
-            # Vertical picker (0–3):
             st.markdown("**Verticals (0–3)**")
             selected_verticals = st.multiselect(
-                "",
+                " ",
                 options=VERTICALS,
-                key=f"vert_{product_slot}",
+                key=f"vert_{slot}",
                 label_visibility="collapsed",
             )
 
-        elif base_selection == "Standalone Vertical":
-            # No multiple features—only pick exactly **one** vertical:
+        else:  # Standalone Vertical
             selected_reader = []
             selected_streaming = []
-
-            st.markdown("**Choose a Single Vertical**")
+            st.markdown("**Choose One Vertical**")
             single_vert = st.selectbox(
-                "",
+                " ",
                 options=["Select Vertical"] + VERTICALS,
-                key=f"vert_{product_slot}",
+                key=f"vert_{slot}",
                 label_visibility="collapsed",
             )
-            # If they chose a valid vertical, wrap in a 1-element list; else empty
             selected_verticals = [single_vert] if single_vert != "Select Vertical" else []
 
+        # Pricing Slider
+        min_p, max_p = get_price_range(base_selection, selected_verticals)
+        if min_p and max_p:
+            price = st.slider(
+                f"${min_p:,.2f} – ${max_p:,.2f}",
+                min_value=min_p,
+                max_value=max_p,
+                value=min_p,
+                step=0.01,
+                key=f"slider_{slot}",
+                label_visibility="collapsed",
+            )
+            st.markdown(
+                f"<div class='price-text'>"
+                f"<span>${price:,.2f}/mo</span>   "
+                f"<span>(${price*12:,.2f}/yr)</span></div>",
+                unsafe_allow_html=True,
+            )
         else:
-            # “Select Base Product” or unrecognized
-            selected_reader = []
-            selected_streaming = []
-            selected_verticals = []
+            st.markdown(
+                "<div class='price-text-muted'>"
+                "Pricing unavailable for this combination</div>",
+                unsafe_allow_html=True,
+            )
 
-        # (d) Pricing slider (min/max depend on base + #verticals)
-        if base_selection != "Select Base Product":
-            min_price, max_price = get_price_range(base_selection, selected_verticals)
-            if min_price > 0 and max_price > 0:
-                price = st.slider(
-                    f"${min_price:,.2f} – ${max_price:,.2f}",
-                    min_value=min_price,
-                    max_value=max_price,
-                    value=min_price,
-                    step=0.01,
-                    key=f"slider_{product_slot}",
-                    label_visibility="collapsed",
-                )
-                st.markdown(
-                    f"**${price:,.2f}/mo**\n**Annual (${'{:,}'.format(int(price*12))})**",
-                    unsafe_allow_html=True,
-                )
-            else:
-                st.markdown("*Pricing not available for this combination*", unsafe_allow_html=True)
-        else:
-            st.markdown("*Set base product to see pricing*", unsafe_allow_html=True)
-
-
-# ── 6. CONTROL BAR (ALL 8 BUTTONS) ───────────────────────────────────────────────
+# ── 5. FOOTER NOTE (Optional: show disclaimers, etc.) ──────────────────────────
 st.markdown("---")
-btn_cols = st.columns(8, gap="small")
-with btn_cols[0]:
-    if st.button("🗑 Clear All"):
-        # Reset every session_state value we created above
-        for i in range(1, total_products + 1):
-            st.session_state[f"base_{i}"] = "Select Base Product"
-            st.session_state[f"rf_{i}"] = []
-            st.session_state[f"sf_{i}"] = []
-            st.session_state[f"vert_{i}"] = []
-            st.session_state[f"slider_{i}"] = None
-        st.experimental_rerun()  # refresh everything
-
-with btn_cols[1]:
-    if st.button("📊 Set Report Type"):
-        st.info("Set Report Type clicked (stub)")
-
-with btn_cols[2]:
-    if st.button("▶️ Run Simulation"):
-        st.write("Running simulation logic…")
-        # Example logic: read cnn_simulator.xlsx (if it exists), do your math, then save
-        try:
-            wb = load_workbook("cnn_simulator.xlsx")
-            # … insert real simulation logic here …
-            wb.save("cnn_simulator_out.xlsx")
-            st.success("Simulation complete—download the results below.")
-            st.download_button("Download Model Output", "cnn_simulator_out.xlsx")
-        except FileNotFoundError:
-            st.error("Error: ‘cnn_simulator.xlsx’ not found in working directory.")
-
-with btn_cols[3]:
-    if st.button("👤 Show Profiles"):
-        st.info("Show Profiles clicked (stub)")
-
-with btn_cols[4]:
-    if st.button("🌎 Market Factors"):
-        st.info("Market Factors clicked (stub)")
-
-with btn_cols[5]:
-    if st.button("ℹ️ About this Model"):
-        st.info("About this Model clicked (stub)")
-
-with btn_cols[6]:
-    if st.button("🧠 Model Insights"):
-        st.info("Model Insights clicked (stub)")
-
-with btn_cols[7]:
-    if st.button("🤖 AI Configurator"):
-        st.info("AI Configurator clicked (stub)")
+st.markdown("<div class='footer'>© 2025 BEYOND Insights. All Rights Reserved.</div>", unsafe_allow_html=True)
