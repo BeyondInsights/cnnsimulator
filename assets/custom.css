@@ -1,0 +1,57 @@
+/* assets/custom.css */
+/* Add your custom CSS here */
+body {
+    background-color: #f7f7f7;
+}
+/* assets/custom.css */
+
+/* ── A. REDUCE PAGE PADDING ────────────────────────────────────────── */
+.css-1d391kg { /* top-level page container */
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+/* ── B. REDUCE COLUMN GUTTER / SPACING ────────────────────────────── */
+.css-1lcbmhc { /* streamlit column container */
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ── C. TIGHTER CARD HEADER ───────────────────────────────────────── */
+.product-header {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 0.25rem !important;
+}
+
+/* ── D. SHRINK MULTISELECT / SELECTBOX HEIGHT ─────────────────────── */
+.stMultiSelect, .stSelectbox {
+    margin: 0.25rem 0 !important;
+    font-size: 0.9rem !important;
+}
+
+/* ── E. SHRINK SLIDER & ITS LABEL ─────────────────────────────────── */
+.stSlider>div {
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+}
+.stSlider label {
+    font-size: 0.85rem !important;
+    margin-bottom: 0.15rem !important;
+}
+
+/* ── F. TIGHTEN BUTTON SIZE ───────────────────────────────────────── */
+.stButton>button {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.85rem !important;
+    margin: 0.1rem !important;
+}
+
+/* ── G. TABLE STYLING (IF YOU WANT TO SHOW ANY SMALL TABLE) ────────── */
+.stDataFrame, .stTable {
+    font-size: 0.85rem !important;
+    margin: 0.5rem 0 !important;
+}
