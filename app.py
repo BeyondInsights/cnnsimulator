@@ -8,65 +8,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ── 1. CUSTOM CSS ──────────────────────────────────────────────────────────────
+# ── 1. LOAD CUSTOM CSS ────────────────────────────────────────────────────────
 with open("assets/custom.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── 2. TOP TOOLBAR (BUTTONS + BRANDING) ────────────────────────────────────────
-# We place all eight buttons in a styled container at the top
-toolbar_cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 4])
-with toolbar_cols[0]:
-    if st.button("🗑 Clear All", key="btn_clear"):
-        # Reset every product card’s session_state:
-        for i in range(1, 7):
-            st.session_state[f"base_{i}"] = "Select Base Product"
-            st.session_state[f"rf_{i}"] = []
-            st.session_state[f"sf_{i}"] = []
-            st.session_state[f"vert_{i}"] = []
-            st.session_state[f"slider_{i}"] = None
-            st.session_state[f"exclude_{i}"] = False
-        st.experimental_rerun()
-with toolbar_cols[1]:
-    if st.button("📊 Set Report Type", key="btn_report"):
-        st.info("Set Report Type clicked (stub)")
-with toolbar_cols[2]:
-    if st.button("▶️ Run Simulation", key="btn_run"):
-        try:
-            wb = load_workbook("cnn_simulator.xlsx")
-            # … your simulation logic goes here …
-            wb.save("cnn_simulator_out.xlsx")
-            st.success("Simulation complete—download below.")
-            st.download_button("Download Results", "cnn_simulator_out.xlsx", key="btn_dl")
-        except FileNotFoundError:
-            st.error("Error: ‘cnn_simulator.xlsx’ not found.")
-with toolbar_cols[3]:
-    if st.button("👤 Show Profiles", key="btn_profiles"):
-        st.info("Show Profiles clicked (stub)")
-with toolbar_cols[4]:
-    if st.button("🌎 Market Factors", key="btn_market"):
-        st.info("Market Factors clicked (stub)")
-with toolbar_cols[5]:
-    if st.button("ℹ️ About this Model", key="btn_about"):
-        st.info("About this Model clicked (stub)")
-with toolbar_cols[6]:
-    if st.button("🧠 Model Insights", key="btn_insights"):
-        st.info("Model Insights clicked (stub)")
-with toolbar_cols[7]:
-    if st.button("🤖 AI Configurator", key="btn_ai"):
-        st.info("AI Configurator clicked (stub)")
-with toolbar_cols[8]:
-    # Branding: “Powered by BEYOND Insights” with your logo
+# ── 2. HEADER: TITLE + LOGO + “Powered by BEYOND Insights” ────────────────────
+header_col1, header_col2, header_col3 = st.columns([1, 6, 1])
+with header_col1:
+    st.write("")  # spacer
+with header_col2:
     st.markdown(
+        "<div class='app-header'>"
+        "<h1 class='app-title'>CNN News Subscription Simulator</h1>"
         "<div class='branding'>"
         "<img src='assets/logo.png' class='branding-logo'>"
         "<span class='branding-text'>Powered by BEYOND Insights</span>"
+        "</div>"
         "</div>",
         unsafe_allow_html=True,
     )
+with header_col3:
+    st.write("")
 
 st.markdown("---")
 
-# ── 3. DATA FROM NOTES (features, verticals, pricing table) ───────────────────
+# ── 3. DATA FROM NOTES (features, verticals, pricing) ─────────────────────────
 # Source: notes.txt :contentReference[oaicite:0]{index=0}
 
 READER_FEATURES = [
@@ -138,7 +104,10 @@ PRICING_TABLE = {
 
 
 def get_price_range(base_prod: str, selected_verticals: list[str]) -> tuple[float, float]:
-    """Return (min_price, max_price) based on base product + # of verticals."""
+    """
+    Returns (min_price, max_price) based on base product and # of verticals.
+    If Standalone Vertical, we treat it as exactly 1 vertical.
+    """
     if base_prod == "Standalone Vertical":
         key = (base_prod, 1)
     else:
@@ -147,31 +116,74 @@ def get_price_range(base_prod: str, selected_verticals: list[str]) -> tuple[floa
     return PRICING_TABLE.get(key, (0.0, 0.0))
 
 
-# ── 4. SIX PRODUCT CARDS ───────────────────────────────────────────────────────
+# ── 4. TOP TOOLBAR: EIGHT BUTTONS ─────────────────────────────────────────────
+toolbar_cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 4])
+with toolbar_cols[0]:
+    if st.button("🗑 Clear All", key="btn_clear"):
+        for i in range(1, 7):
+            st.session_state[f"base_{i}"] = "Select Base Product"
+            st.session_state[f"rf_{i}"] = []
+            st.session_state[f"sf_{i}"] = []
+            st.session_state[f"vert_{i}"] = []
+            st.session_state[f"slider_{i}"] = None
+            st.session_state[f"exclude_{i}"] = False
+        st.experimental_rerun()
+with toolbar_cols[1]:
+    if st.button("📊 Set Report Type", key="btn_report"):
+        st.info("Set Report Type clicked (stub)")
+with toolbar_cols[2]:
+    if st.button("▶️ Run Simulation", key="btn_run"):
+        try:
+            wb = load_workbook("cnn_simulator.xlsx")
+            # … insert real simulation logic here …
+            wb.save("cnn_simulator_out.xlsx")
+            st.success("Simulation complete—download your results below.")
+            st.download_button("Download Results", "cnn_simulator_out.xlsx", key="btn_dl")
+        except FileNotFoundError:
+            st.error("Error: ‘cnn_simulator.xlsx’ not found.")
+with toolbar_cols[3]:
+    if st.button("👤 Show Profiles", key="btn_profiles"):
+        st.info("Show Profiles clicked (stub)")
+with toolbar_cols[4]:
+    if st.button("🌎 Market Factors", key="btn_market"):
+        st.info("Market Factors clicked (stub)")
+with toolbar_cols[5]:
+    if st.button("ℹ️ About this Model", key="btn_about"):
+        st.info("About this Model clicked (stub)")
+with toolbar_cols[6]:
+    if st.button("🧠 Model Insights", key="btn_insights"):
+        st.info("Model Insights clicked (stub)")
+with toolbar_cols[7]:
+    if st.button("🤖 AI Configurator", key="btn_ai"):
+        st.info("AI Configurator clicked (stub)")
+with toolbar_cols[8]:
+    # Already displayed above; can be removed if redundant
+    st.write("")
+
+st.markdown("---")
+
+# ── 5. SIX PRODUCT CARDS (BOXED + COLORED HEADERS) ────────────────────────────
 total_products = 6
 cols = st.columns(total_products, gap="small")
 
 for idx in range(total_products):
     with cols[idx]:
         slot = idx + 1
-        # Checkbox to EXCLUDE this product from the simulation:
+        # (a) Exclude checkbox in the top-left of each card
         excluded = st.checkbox(
-            f"Exclude",
+            "",
             key=f"exclude_{slot}",
-            label_visibility="collapsed",
-            help="Check to exclude this product from the simulation",
+            label_visibility="hidden",
+            help="Check to exclude this product from simulation",
         )
-
-        # Gray‐out overlay if excluded:
+        # (b) If excluded, overlay the entire card
         if excluded:
             st.markdown(
-                "<div class='overlay'>"
-                "<span class='overlay-text'>EXCLUDED</span>"
-                "</div>",
+                "<div class='overlay'><span class='overlay-text'>EXCLUDED</span></div>",
                 unsafe_allow_html=True,
             )
 
-        # Base‐product dropdown
+        # (c) Base-product selectbox
         base_selection = st.selectbox(
             "",
             options=BASE_PRODUCTS,
@@ -180,120 +192,126 @@ for idx in range(total_products):
             label_visibility="collapsed",
         )
 
-        # Card header (bold, colored once a base is selected)
+        # (d) Card header: purple if active, gray if not
         if base_selection != "Select Base Product" and not excluded:
-            header_color = "#c00"
+            header_color = "#6e1b9e"  # BEYOND purple
         else:
-            header_color = "#555"  # darker gray for unselected/disabled
+            header_color = "#555"  # muted gray
         st.markdown(
             f"<div class='card-header' style='background-color:{header_color};'>"
             f"PRODUCT {slot}</div>",
             unsafe_allow_html=True,
         )
 
+        # (e) If excluded or no base, show a muted prompt and skip the rest
         if excluded or base_selection == "Select Base Product":
             st.markdown(
                 "<div class='card-body-muted'>"
-                "Select a base product to enable.</div>",
+                "Select a base product to enable this card.</div>",
                 unsafe_allow_html=True,
             )
-            continue  # skip the rest of this card
+            continue
 
-        # Depending on base_selection, show appropriate feature/vertical pickers:
+        # (f) Feature & vertical pickers and “Configure Pricing” box
         if base_selection == "CNN Reader":
-            st.markdown("**Reader Features**")
+            st.markdown("<div class='section-title'>Reader Features</div>")
             selected_reader = st.multiselect(
-                " ",
+                "Choose Reader Features",
                 options=READER_FEATURES,
                 key=f"rf_{slot}",
-                label_visibility="collapsed",
+                default=[],
+                label_visibility="visible",
             )
             selected_streaming = []
-            st.markdown("**Verticals (0–3)**")
+            st.markdown("<div class='section-title'>Verticals (0–3)</div>")
             selected_verticals = st.multiselect(
-                " ",
+                "Choose Verticals",
                 options=VERTICALS,
                 key=f"vert_{slot}",
-                label_visibility="collapsed",
+                default=[],
+                label_visibility="visible",
             )
-
         elif base_selection == "CNN Streaming":
-            st.markdown("**Streaming Features**")
+            st.markdown("<div class='section-title'>Streaming Features</div>")
             selected_streaming = st.multiselect(
-                " ",
+                "Choose Streaming Features",
                 options=STREAMING_FEATURES,
                 key=f"sf_{slot}",
-                label_visibility="collapsed",
+                default=[],
+                label_visibility="visible",
             )
             selected_reader = []
-            st.markdown("**Verticals (0–3)**")
+            st.markdown("<div class='section-title'>Verticals (0–3)</div>")
             selected_verticals = st.multiselect(
-                " ",
+                "Choose Verticals",
                 options=VERTICALS,
                 key=f"vert_{slot}",
-                label_visibility="collapsed",
+                default=[],
+                label_visibility="visible",
             )
-
         elif base_selection == "CNN All Access":
-            st.markdown("**Reader Features**")
+            st.markdown("<div class='section-title'>Reader Features</div>")
             selected_reader = st.multiselect(
-                " ",
+                "Choose Reader Features",
                 options=READER_FEATURES,
                 key=f"rf_{slot}",
-                label_visibility="collapsed",
+                default=[],
+                label_visibility="visible",
             )
-            st.markdown("**Streaming Features**")
+            st.markdown("<div class='section-title'>Streaming Features</div>")
             selected_streaming = st.multiselect(
-                " ",
+                "Choose Streaming Features",
                 options=STREAMING_FEATURES,
                 key=f"sf_{slot}",
-                label_visibility="collapsed",
+                default=[],
+                label_visibility="visible",
             )
-            st.markdown("**Verticals (0–3)**")
+            st.markdown("<div class='section-title'>Verticals (0–3)</div>")
             selected_verticals = st.multiselect(
-                " ",
+                "Choose Verticals",
                 options=VERTICALS,
                 key=f"vert_{slot}",
-                label_visibility="collapsed",
+                default=[],
+                label_visibility="visible",
             )
-
         else:  # Standalone Vertical
             selected_reader = []
             selected_streaming = []
-            st.markdown("**Choose One Vertical**")
+            st.markdown("<div class='section-title'>Choose One Vertical</div>")
             single_vert = st.selectbox(
-                " ",
+                "Choose Vertical",
                 options=["Select Vertical"] + VERTICALS,
                 key=f"vert_{slot}",
-                label_visibility="collapsed",
+                label_visibility="visible",
             )
             selected_verticals = [single_vert] if single_vert != "Select Vertical" else []
 
-        # Pricing Slider
+        # (g) “Configure Pricing” box
         min_p, max_p = get_price_range(base_selection, selected_verticals)
         if min_p and max_p:
-            price = st.slider(
-                f"${min_p:,.2f} – ${max_p:,.2f}",
-                min_value=min_p,
-                max_value=max_p,
-                value=min_p,
-                step=0.01,
-                key=f"slider_{slot}",
-                label_visibility="collapsed",
-            )
-            st.markdown(
-                f"<div class='price-text'>"
-                f"<span>${price:,.2f}/mo</span>   "
-                f"<span>(${price*12:,.2f}/yr)</span></div>",
-                unsafe_allow_html=True,
-            )
+            with st.expander("🔧 Configure Pricing"):
+                price = st.slider(
+                    f"${min_p:,.2f} – ${max_p:,.2f}",
+                    min_value=min_p,
+                    max_value=max_p,
+                    value=min_p,
+                    step=0.01,
+                    key=f"slider_{slot}",
+                    label_visibility="collapsed",
+                )
+                st.markdown(
+                    f"<div class='price-text'>"
+                    f"<span>${price:,.2f}/mo</span>"
+                    f"<span>(${price*12:,.2f}/yr)</span></div>",
+                    unsafe_allow_html=True,
+                )
         else:
             st.markdown(
                 "<div class='price-text-muted'>"
-                "Pricing unavailable for this combination</div>",
+                "Pricing not available for this combination.</div>",
                 unsafe_allow_html=True,
             )
 
-# ── 5. FOOTER NOTE (Optional: show disclaimers, etc.) ──────────────────────────
+# ── 6. FOOTER ────────────────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("<div class='footer'>© 2025 BEYOND Insights. All Rights Reserved.</div>", unsafe_allow_html=True)
