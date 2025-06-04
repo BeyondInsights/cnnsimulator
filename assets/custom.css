@@ -1,28 +1,26 @@
 /* ── A. GLOBAL & BASE STYLES ────────────────────────────────────────────────── */
 
-/* Use a light gray background for the entire app */
+/* Light gray background for the entire app */
 body {
     background-color: #fafafa;
     color: #333;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Main H1 title in the header */
-.app-title {
-    font-size: 2rem;
-    color: #333;
-    margin-bottom: 0.2rem;
-}
-
-/* ── B. HEADER & BRANDING ───────────────────────────────────────────────────── */
+/* App header (title + branding) */
 .app-header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 0.5rem;
 }
+.app-title {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 0.2rem;
+}
 
-/* “Powered by BEYOND Insights” with logo */
+/* “Powered by BEYOND Insights” styling */
 .branding {
     display: flex;
     align-items: center;
@@ -38,7 +36,7 @@ body {
     font-weight: bold;
 }
 
-/* Horizontal separator line */
+/* Divider line */
 hr, .stDivider {
     border: none;
     height: 1px;
@@ -46,12 +44,13 @@ hr, .stDivider {
     margin: 0.5rem 0;
 }
 
-/* ── C. TOP TOOLBAR & BUTTONS ──────────────────────────────────────────────── */
+/* ── B. TOP TOOLBAR & BUTTONS ──────────────────────────────────────────────── */
+/* Slight padding around the toolbar row */
 .css-1d391kg {
     padding: 0.5rem !important;
 }
 
-/* Style each toolbar button as a purple‐gray box with gold hover */
+/* Style each toolbar button as a purple box with gold hover */
 .stButton > button {
     background-color: #6e1b9e !important; /* BEYOND purple */
     color: #fff !important;
@@ -69,9 +68,9 @@ hr, .stDivider {
     border-color: #c89e15 !important;
 }
 
-/* ── D. PRODUCT CARD LAYOUT ───────────────────────────────────────────────── */
+/* ── C. PRODUCT CARD LAYOUT ───────────────────────────────────────────────── */
 
-/* Each product column is wrapped in a white “card” box: */
+/* Each product column is a white “card” with a subtle shadow */
 .css-1lcbmhc > div {
     background-color: #fff;
     border: 2px solid #ddd;
@@ -82,7 +81,7 @@ hr, .stDivider {
     position: relative;
 }
 
-/* Card header: distinct purple bar for active cards, gray bar for inactive */
+/* Card header: boxed purple (if active) or gray (if inactive) */
 .card-header {
     text-align: center;
     color: #fff;
@@ -93,7 +92,7 @@ hr, .stDivider {
     margin: -1rem -1rem 0.75rem -1rem;
 }
 
-/* Body when no base selected */
+/* Muted body text when no base is selected */
 .card-body-muted {
     color: #777;
     font-size: 0.9rem;
@@ -101,7 +100,7 @@ hr, .stDivider {
     padding: 1rem 0;
 }
 
-/* Excluded overlay (semi-transparent white + red text) */
+/* Exclude‐card overlay (semi‐transparent white + red text) */
 .overlay {
     position: absolute;
     top: 0;
@@ -131,9 +130,9 @@ hr, .stDivider {
     font-size: 0.95rem;
 }
 
-/* ── E. SELECTBOX & MULTISELECT STYLING ─────────────────────────────────────── */
+/* ── D. SELECTBOX & MULTISELECT STYLING ─────────────────────────────────────── */
 
-/* Bigger click area and padding for selectboxes */
+/* Bigger click area, border, and padding for selectboxes */
 .stSelectbox > div,
 .stMultiSelect > div {
     border: 1px solid #bbb !important;
@@ -144,48 +143,48 @@ hr, .stDivider {
     margin-bottom: 0.5rem !important;
 }
 
-/* Dropdown arrow color */
+/* Dropdown arrow in purple */
 .stSelectbox svg,
 .stMultiSelect svg {
     color: #6e1b9e !important;  /* BEYOND purple */
 }
 
-/* ── F. “CONFIGURE PRICING” EXPANDER ──────────────────────────────────────── */
+/* ── E. “CONFIGURE PRICING” EXPANDER ──────────────────────────────────────── */
 
-/* Gold‐bordered expander box */
-.stExpanderHeader {
-    font-weight: bold !important;
-    color: #333 !important;
-}
+/* Gold‐bordered expander header */
 .stExpander > div[role="button"] {
-    border: 1px solid #dcae19 !important; /* gold */
+    border: 1px solid #dcae19 !important; /* BEYOND gold */
     border-radius: 0.3rem !important;
     background-color: #fff !important;
     padding: 0.4rem 0.6rem !important;
     margin-bottom: 0.3rem !important;
 }
+.stExpanderHeader {
+    font-weight: bold !important;
+    color: #333 !important;
+}
 
-/* Expander content area: slight gray background */
+/* Expander content area with light gray background */
 .stExpanderContent {
     background-color: #f9f9f9 !important;
     padding: 0.6rem 1rem !important;
     border-radius: 0 0 0.3rem 0.3rem !important;
 }
 
-/* ── G. PRICE SLIDER & TEXT ───────────────────────────────────────────────── */
+/* ── F. PRICE SLIDER & TEXT ───────────────────────────────────────────────── */
 
-/* Slider track color */
+/* Slider track & thumb */
 input[type="range"]::-webkit-slider-runnable-track {
     background: #ddd;
 }
 input[type="range"]::-webkit-slider-thumb {
-    background: #dcae19; /* gold */
+    background: #dcae19; /* BEYOND gold */
     border: 2px solid #b78f17;
     width: 1rem;
     height: 1rem;
 }
 
-/* Price text (monthly + annual) */
+/* Price text styling */
 .price-text {
     font-size: 0.9rem;
     font-weight: bold;
@@ -203,12 +202,12 @@ input[type="range"]::-webkit-slider-thumb {
     text-align: center;
 }
 
-/* ── H. CHECKBOX ───────────────────────────────────────────────────────────── */
+/* ── G. CHECKBOX ───────────────────────────────────────────────────────────── */
 .stCheckbox > div {
     margin: 0.3rem 0 !important;
 }
 
-/* ── I. FOOTER ─────────────────────────────────────────────────────────────── */
+/* ── H. FOOTER ─────────────────────────────────────────────────────────────── */
 .footer {
     text-align: center;
     color: #666;
