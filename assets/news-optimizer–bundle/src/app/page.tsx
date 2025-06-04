@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 
 // ─── Import actions (file lives at src/app/actions.ts) ────────────────────────
@@ -23,27 +23,27 @@ import type {
   SimulationResult,
 } from "../lib/types";
 
-// ─── Import static JSON lookups (files live under src/data/) ───────────────────
-import coreProductDescriptionsData from "../data/coreProductDescriptions.json";
-import readerFeatureDescriptionsData from "../data/readerFeatureDescriptions.json";
-import streamingFeatureDescriptionsData from "../data/streamingFeatureDescriptions.json";
-import verticalDescriptionsData from "../data/verticalDescriptions.json";
-import attributeImportanceSample from "../data/attributeImportance.json";
-import partWorthUtilitiesSample from "../data/partWorthUtilities.json";
-
 // ─── Import your top‐level components (files live under src/components/) ─────────
 import ProductCard from "../components/ProductCard";
 
 // ─── Import UI primitives (files live under src/components/ui/) ───────────────
 // We only import what we actually use below:
 import PricingConfig from "../components/ui/PricingConfig";
-import Slider from "../components/ui/slider";
+import Slider from "../components/ui/Slider";
+import ProductCardContainer from "../components/ui/ProductCardContainer";
 
 // ─── Import your modals (files live under src/components/modals/) ──────────────
 import ReviewFeaturesModal from "../components/modals/ReviewFeaturesModal";
+import ReviewVerticalsModal from "../components/modals/ReviewVerticalsModal";
 import MarketFactorsModal from "../components/modals/MarketFactorsModal";
 import MarketRealizationModal from "../components/modals/MarketRealizationModal";
-import CustomAlertModal from "../components/modals/CustomAlertModal";
+import SetReportTypeModal from "../components/modals/SetReportTypeModal";
+import AboutModelModal from "../components/modals/AboutModelModal";
+import AiConfiguratorModal from "../components/modals/AiConfiguratorModal";
+import FeatureModal from "../components/modals/FeatureModal";
+import FeatureSelectionModal from "../components/modals/FeatureSelectionModal";
+import ModelInsightsModal from "../components/modals/ModelInsightsModal";
+import TamDetailsModal from "../components/modals/TamDetailsModal";
 
 // ─── Import global CSS (file lives at src/styles/globals.css) ──────────────────
 import "../styles/globals.css";
@@ -86,24 +86,35 @@ export default function SimulatorPage() {
     }
   };
 
-  // ─── 2. FETCH LARGE JSONS ON MOUNT ─────────────────────────────────────────────
-  const [fullRespondentData, setFullRespondentData] = useState<any[]>([]);
-  const [fullRespondentUtils, setFullRespondentUtils] = useState<any[]>([]);
+  // ─── 2. FETCH JSON DATA AT RUNTIME (FROM public/data/) ──────────────────────────
+  const [coreProductDescriptionsData, setCoreProductDescriptionsData] = useState<any>(null);
+  const [readerFeatureDescriptionsData, setReaderFeatureDescriptionsData] = useState<any>(null);
+  const [streamingFeatureDescriptionsData, setStreamingFeatureDescriptionsData] = useState<any>(null);
+  const [verticalDescriptionsData, setVerticalDescriptionsData] = useState<any>(null);
+  const [attributeImportanceSample, setAttributeImportanceSample] = useState<any>(null);
+  const [partWorthUtilitiesSample, setPartWorthUtilitiesSample] = useState<any>(null);
 
   useEffect(() => {
     if (!isAuthorized) return;
 
-    // Fetch respondentData.json from public/data/respondentData.json
-    fetch("/data/respondentData.json")
-      .then((res) => res.json())
-      .then((data) => setFullRespondentData(data))
-      .catch((e) => console.error("Error loading respondentData.json:", e));
+    // Helper to fetch JSON by URL and store in state under the given setter
+    const fetchJson = async (url: string, setter: (data: any) => void) => {
+      try {
+        const resp = await fetch(url);
+        const json = await resp.json();
+        setter(json);
+      } catch (e) {
+        console.error(`Error loading ${url}:`, e);
+      }
+    };
 
-    // Fetch respondentUtilities.json from public/data/respondentUtilities.json
-    fetch("/data/respondentUtilities.json")
-      .then((res) => res.json())
-      .then((data) => setFullRespondentUtils(data))
-      .catch((e) => console.error("Error loading respondentUtilities.json:", e));
+    // Fetch each JSON file (all under public/data/)
+    fetchJson("/data/coreProductDescriptions.json", setCoreProductDescriptionsData);
+    fetchJson("/data/readerFeatureDescriptions.json", setReaderFeatureDescriptionsData);
+    fetchJson("/data/streamingFeatureDescriptions.json", setStreamingFeatureDescriptionsData);
+    fetchJson("/data/verticalDescriptions.json", setVerticalDescriptionsData);
+    fetchJson("/data/attributeImportance.json", setAttributeImportanceSample);
+    fetchJson("/data/partWorthUtilities.json", setPartWorthUtilitiesSample);
   }, [isAuthorized]);
 
   // ─── 3. PRODUCT CARDS STATE ───────────────────────────────────────────────────
@@ -112,11 +123,11 @@ export default function SimulatorPage() {
       ...cfg,
       chosenTier: cfg.defaultTier || "Moderate",
       chosenFeatures: cfg.defaultFeatures || [],
+      chosenVerticals: [],           // new: track selected verticals
       sensitivityPoints: [] as SensitivityPoint[],
       monthlyRate: 10,
       pricingType: "monthly",
       discount: "",
-      verticals: [],
     }))
   );
 
@@ -136,7 +147,7 @@ export default function SimulatorPage() {
     setInfoModalForFactor,
   ] = useState<keyof MarketFactors | null>(null);
 
-  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
+  const [showReportTypeModal, setShowReportTypeModal] = useState(false);
 
   const handleFactorChange = (factorKey: keyof MarketFactors, newVal: number) => {
     setMarketFactors((prev) => ({
@@ -155,6 +166,7 @@ export default function SimulatorPage() {
       productId: cfg.productId,
       chosenTier: cfg.chosenTier!,
       chosenFeatures: cfg.chosenFeatures || [],
+      chosenVerticals: cfg.chosenVerticals || [],
     }));
     try {
       const result = await runServerSimulation(inputs);
@@ -167,21 +179,22 @@ export default function SimulatorPage() {
     }
   };
 
-  // ─── 6. FEATURE‐REVIEW MODAL STATE ────────────────────────────────────────────
+  // ─── 6. FEATURE‐REVIEW & VERTICAL‐REVIEW MODAL STATE ──────────────────────────
   const [featuresModalFor, setFeaturesModalFor] = useState<string | null>(null);
+  const [verticalsModalFor, setVerticalsModalFor] = useState<string | null>(null);
 
-  // ─── 7. CUSTOM ALERT MODAL STATE ──────────────────────────────────────────────
-  type AlertType = "alert" | "confirm";
-  interface AlertState {
-    title: string;
-    message: string;
-    type: AlertType;
-    onConfirm?: () => void;
-  }
-  const [customAlert, setCustomAlert] = useState<AlertState | null>(null);
-  const closeCustomAlert = () => setCustomAlert(null);
+  // ─── 7. “ABOUT” and “AI CONFIGURATOR” MODAL STATE ─────────────────────────────
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showAiConfigurator, setShowAiConfigurator] = useState(false);
 
-  // ─── 8. RENDER ─────────────────────────────────────────────────────────────────
+  // ─── 8. “FEATURE SELECTION” MODAL STATE (for deeper selection flows) ──────────
+  const [showFeatureSelectModal, setShowFeatureSelectModal] = useState(false);
+
+  // ─── 9. MODEL INSIGHTS & TAM DETAILS MODAL STATE ─────────────────────────────
+  const [showModelInsightsModal, setShowModelInsightsModal] = useState(false);
+  const [showTamDetailsModal, setShowTamDetailsModal] = useState(false);
+
+  // ─── 10. RENDER ─────────────────────────────────────────────────────────────────
   if (!isAuthorized) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-100">
@@ -208,13 +221,36 @@ export default function SimulatorPage() {
           </button>
         </form>
         {showEmailAlert && (
-          <CustomAlertModal
-            title="Access Denied"
-            message="That email is not on our approved list."
-            type="alert"
-            onConfirm={closeCustomAlert}
-          />
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm mx-auto">
+              <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+              <p className="mb-4">That email is not on our approved list.</p>
+              <button
+                onClick={() => setShowEmailAlert(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         )}
+      </div>
+    );
+  }
+
+  // Only render the main UI once all JSON lookups have loaded
+  const allJsonLoaded =
+    coreProductDescriptionsData &&
+    readerFeatureDescriptionsData &&
+    streamingFeatureDescriptionsData &&
+    verticalDescriptionsData &&
+    attributeImportanceSample &&
+    partWorthUtilitiesSample;
+
+  if (!allJsonLoaded) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-gray-500">Loading data…</p>
       </div>
     );
   }
@@ -228,14 +264,23 @@ export default function SimulatorPage() {
             <img src="/logo.svg" alt="CNN Logo" className="h-10" />
           </Link>
           <h1 className="text-3xl font-bold">CNN Product Simulator</h1>
-          <button
-            onClick={() => setIsAuthorized(false)}
-            className="text-sm text-red-600 hover:underline"
-          >
-            Sign Out
-          </button>
+          <div className="space-x-4">
+            <button
+              onClick={() => setShowAboutModal(true)}
+              className="text-sm text-gray-700 hover:underline"
+            >
+              About
+            </button>
+            <button
+              onClick={() => setIsAuthorized(false)}
+              className="text-sm text-red-600 hover:underline"
+            >
+              Sign Out
+            </button>
+          </div>
         </header>
 
+        {/* ─── TOOLBAR BUTTONS ────────────────────────────────────────────── */}
         <nav className="flex space-x-4 mb-8">
           <button
             onClick={() => setShowResultModal(true)}
@@ -244,10 +289,10 @@ export default function SimulatorPage() {
             Show Last Results
           </button>
           <button
-            onClick={() => setIsPresetModalOpen(true)}
+            onClick={() => setShowReportTypeModal(true)}
             className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
           >
-            Preset Scenarios
+            Set Report Type
           </button>
           <button
             onClick={() => setShowResultModal(false)}
@@ -255,28 +300,40 @@ export default function SimulatorPage() {
           >
             Clear Results
           </button>
+          <button
+            onClick={() => setShowModelInsightsModal(true)}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+          >
+            Model Insights
+          </button>
+          <button
+            onClick={() => setShowAiConfigurator(true)}
+            className="px-4 py-2 bg-pink-600 text-white rounded hover:bg-pink-700"
+          >
+            AI Configurator
+          </button>
         </nav>
 
         {/* ─── PRODUCT CARDS GRID ────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {productConfigs.map((cfg) => (
-            <ProductCard
-              key={cfg.productId}
-              productId={cfg.productId}
-              name={cfg.name}
-              defaultTier={cfg.chosenTier!}
-              defaultFeatures={cfg.chosenFeatures!}
-              onTierChange={(newTier) =>
-                updateProductCard(cfg.productId, { chosenTier: newTier })
-              }
-              onReviewFeatures={() => setFeaturesModalFor(cfg.productId)}
-              utilityData={fullRespondentUtils}
-            >
-              {/* ─── Product‐level pricing UI ────────────────────────── */}
+            <ProductCard key={cfg.productId} {...cfg}>
               <PricingConfig
                 productConfig={cfg}
                 onUpdate={(updates) => updateProductCard(cfg.productId, updates)}
               />
+              <button
+                onClick={() => setFeaturesModalFor(cfg.productId)}
+                className="mt-2 text-sm text-blue-600 hover:underline"
+              >
+                Review Features
+              </button>
+              <button
+                onClick={() => setVerticalsModalFor(cfg.productId)}
+                className="mt-1 text-sm text-blue-600 hover:underline"
+              >
+                Review Verticals
+              </button>
             </ProductCard>
           ))}
         </div>
@@ -299,9 +356,7 @@ export default function SimulatorPage() {
               (factorKey) => (
                 <div key={factorKey} className="flex items-center space-x-2">
                   <div className="flex-1">
-                    <label className="text-sm capitalize">
-                      {factorKey}
-                    </label>
+                    <label className="text-sm capitalize">{factorKey}</label>
                     <Slider
                       min={0}
                       max={100}
@@ -312,7 +367,7 @@ export default function SimulatorPage() {
                       }
                       className="mt-1"
                     />
-                    <div className="text-xs text-muted-foreground flex justify-between">
+                    <div className="text-xs text-gray-500 flex justify-between">
                       <span>0</span>
                       <span>100</span>
                     </div>
@@ -333,7 +388,7 @@ export default function SimulatorPage() {
 
       {/* ─── MODALS ────────────────────────────────────────────────────────── */}
 
-      {/* Market Realization (Results) Modal */}
+      {/* 1) Market Realization (Results) Modal */}
       {showResultModal && simulationResult && (
         <MarketRealizationModal
           visible={showResultModal}
@@ -342,7 +397,7 @@ export default function SimulatorPage() {
         />
       )}
 
-      {/* Market Factor “Info” Modal */}
+      {/* 2) Market Factor “Info” Modal */}
       {infoModalForFactor && (
         <MarketFactorsModal
           visible={!!infoModalForFactor}
@@ -353,12 +408,12 @@ export default function SimulatorPage() {
         />
       )}
 
-      {/* Review Features Modal (per product) */}
+      {/* 3) Review Features Modal (per product) */}
       {featuresModalFor && (
         <ReviewFeaturesModal
           visible={!!featuresModalFor}
           productId={featuresModalFor}
-          availableFeatures={Object.keys(verticalDescriptionsData)}
+          availableFeatures={Object.keys(readerFeatureDescriptionsData)}
           selectedFeatures={
             productConfigs.find((c) => c.productId === featuresModalFor)!
               .chosenFeatures
@@ -374,7 +429,7 @@ export default function SimulatorPage() {
             updateProductCard(featuresModalFor, { chosenFeatures: updated });
           }}
           onSelectAll={() => {
-            const allKeys = Object.keys(verticalDescriptionsData);
+            const allKeys = Object.keys(readerFeatureDescriptionsData);
             updateProductCard(featuresModalFor, { chosenFeatures: allKeys });
           }}
           onAddFeatures={() => setFeaturesModalFor(null)}
@@ -382,26 +437,80 @@ export default function SimulatorPage() {
         />
       )}
 
-      {/* Preset Scenarios “info” modal */}
-      {isPresetModalOpen && (
-        <CustomAlertModal
-          title="Preset Scenarios"
-          message="Here you could show predefined market‐factor packs."
-          type="alert"
-          onConfirm={() => setIsPresetModalOpen(false)}
+      {/* 4) Review Verticals Modal (per product) */}
+      {verticalsModalFor && (
+        <ReviewVerticalsModal
+          visible={!!verticalsModalFor}
+          productId={verticalsModalFor}
+          availableVerticals={Object.keys(verticalDescriptionsData)}
+          selectedVerticals={
+            productConfigs.find((c) => c.productId === verticalsModalFor)!
+              .chosenVerticals
+          }
+          onToggleVertical={(vert: string) => {
+            const current = productConfigs.find(
+              (c) => c.productId === verticalsModalFor
+            )!.chosenVerticals;
+            const isOn = current.includes(vert);
+            const updated = isOn
+              ? current.filter((v) => v !== vert)
+              : [...current, vert];
+            updateProductCard(verticalsModalFor, { chosenVerticals: updated });
+          }}
+          onSelectAll={() => {
+            const allKeys = Object.keys(verticalDescriptionsData);
+            updateProductCard(verticalsModalFor, { chosenVerticals: allKeys });
+          }}
+          onAddVerticals={() => setVerticalsModalFor(null)}
+          onClose={() => setVerticalsModalFor(null)}
         />
       )}
 
-      {/* Custom Alert Dialog */}
-      {customAlert && (
-        <CustomAlertModal
-          title={customAlert.title}
-          message={customAlert.message}
-          type={customAlert.type}
-          onConfirm={() => {
-            if (customAlert.onConfirm) customAlert.onConfirm();
-            closeCustomAlert();
-          }}
+      {/* 5) Set Report Type Modal */}
+      {showReportTypeModal && (
+        <SetReportTypeModal
+          visible={showReportTypeModal}
+          onClose={() => setShowReportTypeModal(false)}
+        />
+      )}
+
+      {/* 6) About Model Modal */}
+      {showAboutModal && (
+        <AboutModelModal
+          visible={showAboutModal}
+          onClose={() => setShowAboutModal(false)}
+        />
+      )}
+
+      {/* 7) AI Configurator Modal */}
+      {showAiConfigurator && (
+        <AiConfiguratorModal
+          visible={showAiConfigurator}
+          onClose={() => setShowAiConfigurator(false)}
+        />
+      )}
+
+      {/* 8) Feature Selection Modal (nested flow/example) */}
+      {showFeatureSelectModal && (
+        <FeatureSelectionModal
+          visible={showFeatureSelectModal}
+          onClose={() => setShowFeatureSelectModal(false)}
+        />
+      )}
+
+      {/* 9) Model Insights Modal */}
+      {showModelInsightsModal && (
+        <ModelInsightsModal
+          visible={showModelInsightsModal}
+          onClose={() => setShowModelInsightsModal(false)}
+        />
+      )}
+
+      {/* 10) TAM Details Modal */}
+      {showTamDetailsModal && (
+        <TamDetailsModal
+          visible={showTamDetailsModal}
+          onClose={() => setShowTamDetailsModal(false)}
         />
       )}
     </>
