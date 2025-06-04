@@ -8,29 +8,30 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ── 1. LOAD CUSTOM CSS ────────────────────────────────────────────────────────
+# ── 1. LOAD CUSTOM CSS (with forced UTF-8) ────────────────────────────────────
 with open("assets/custom.css", encoding="utf-8") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── 2. HEADER: TITLE + LOGO + “Powered by BEYOND Insights” ────────────────────
-header_col1, header_col2, header_col3 = st.columns([1, 6, 1])
-with header_col1:
+# ── 2. HEADER: APP TITLE + LOGO + “Powered by BEYOND Insights” ────────────────
+h1, h2, h3 = st.columns([1, 6, 1])
+with h1:
     st.write("")  # spacer
-with header_col2:
+with h2:
     st.markdown(
         "<div class='app-header'>"
-        "<h1 class='app-title'>CNN News Subscription Simulator</h1>"
-        "<div class='branding'>"
-        "<img src='assets/logo.png' class='branding-logo'>"
-        "<span class='branding-text'>Powered by BEYOND Insights</span>"
-        "</div>"
+        "  <h1 class='app-title'>CNN News Subscription Simulator</h1>"
+        "  <div class='branding'>"
+        "    <img src='assets/logo.png' class='branding-logo'>"
+        "    <span class='branding-text'>Powered by BEYOND Insights</span>"
+        "  </div>"
         "</div>",
         unsafe_allow_html=True,
     )
-with header_col3:
+with h3:
     st.write("")
 
 st.markdown("---")
+
 
 # ── 3. DATA FROM NOTES (features, verticals, pricing) ─────────────────────────
 # Source: notes.txt :contentReference[oaicite:0]{index=0}
@@ -105,8 +106,8 @@ PRICING_TABLE = {
 
 def get_price_range(base_prod: str, selected_verticals: list[str]) -> tuple[float, float]:
     """
-    Returns (min_price, max_price) based on base product and # of verticals.
-    If Standalone Vertical, we treat it as exactly 1 vertical.
+    Return (min_price, max_price) based on the selected base product
+    and the number of verticals. “Standalone Vertical” is forced to 1 vertical.
     """
     if base_prod == "Standalone Vertical":
         key = (base_prod, 1)
@@ -116,7 +117,7 @@ def get_price_range(base_prod: str, selected_verticals: list[str]) -> tuple[floa
     return PRICING_TABLE.get(key, (0.0, 0.0))
 
 
-# ── 4. TOP TOOLBAR: EIGHT BUTTONS ─────────────────────────────────────────────
+# ── 4. TOP TOOLBAR: EIGHT PURPLE BUTTONS (gold on hover) ─────────────────────
 toolbar_cols = st.columns([1, 1, 1, 1, 1, 1, 1, 1, 4])
 with toolbar_cols[0]:
     if st.button("🗑 Clear All", key="btn_clear"):
@@ -157,33 +158,33 @@ with toolbar_cols[7]:
     if st.button("🤖 AI Configurator", key="btn_ai"):
         st.info("AI Configurator clicked (stub)")
 with toolbar_cols[8]:
-    # Already displayed above; can be removed if redundant
-    st.write("")
+    st.write("")  # empty spacer for alignment
 
 st.markdown("---")
 
-# ── 5. SIX PRODUCT CARDS (BOXED + COLORED HEADERS) ────────────────────────────
+
+# ── 5. SIX PRODUCT CARDS (EACH BOXED + PURPLE HEADER) ───────────────────────
 total_products = 6
 cols = st.columns(total_products, gap="small")
 
 for idx in range(total_products):
     with cols[idx]:
         slot = idx + 1
-        # (a) Exclude checkbox in the top-left of each card
+
+        # (a) Exclude checkbox (top-left)
         excluded = st.checkbox(
             "",
             key=f"exclude_{slot}",
             label_visibility="hidden",
-            help="Check to exclude this product from simulation",
+            help="Check to exclude this product from the simulation",
         )
-        # (b) If excluded, overlay the entire card
         if excluded:
             st.markdown(
                 "<div class='overlay'><span class='overlay-text'>EXCLUDED</span></div>",
                 unsafe_allow_html=True,
             )
 
-        # (c) Base-product selectbox
+        # (b) Base-product dropdown
         base_selection = st.selectbox(
             "",
             options=BASE_PRODUCTS,
@@ -192,7 +193,7 @@ for idx in range(total_products):
             label_visibility="collapsed",
         )
 
-        # (d) Card header: purple if active, gray if not
+        # (c) Card header: purple if active, gray if not
         if base_selection != "Select Base Product" and not excluded:
             header_color = "#6e1b9e"  # BEYOND purple
         else:
@@ -203,7 +204,7 @@ for idx in range(total_products):
             unsafe_allow_html=True,
         )
 
-        # (e) If excluded or no base, show a muted prompt and skip the rest
+        # (d) If excluded or unselected, show muted message and skip
         if excluded or base_selection == "Select Base Product":
             st.markdown(
                 "<div class='card-body-muted'>"
@@ -212,7 +213,7 @@ for idx in range(total_products):
             )
             continue
 
-        # (f) Feature & vertical pickers and “Configure Pricing” box
+        # (e) Show the correct feature pickers for each base product
         if base_selection == "CNN Reader":
             st.markdown("<div class='section-title'>Reader Features</div>")
             selected_reader = st.multiselect(
@@ -231,6 +232,7 @@ for idx in range(total_products):
                 default=[],
                 label_visibility="visible",
             )
+
         elif base_selection == "CNN Streaming":
             st.markdown("<div class='section-title'>Streaming Features</div>")
             selected_streaming = st.multiselect(
@@ -249,6 +251,7 @@ for idx in range(total_products):
                 default=[],
                 label_visibility="visible",
             )
+
         elif base_selection == "CNN All Access":
             st.markdown("<div class='section-title'>Reader Features</div>")
             selected_reader = st.multiselect(
@@ -274,6 +277,7 @@ for idx in range(total_products):
                 default=[],
                 label_visibility="visible",
             )
+
         else:  # Standalone Vertical
             selected_reader = []
             selected_streaming = []
@@ -286,7 +290,7 @@ for idx in range(total_products):
             )
             selected_verticals = [single_vert] if single_vert != "Select Vertical" else []
 
-        # (g) “Configure Pricing” box
+        # (f) Put “Configure Pricing” inside a gold‐bordered expander
         min_p, max_p = get_price_range(base_selection, selected_verticals)
         if min_p and max_p:
             with st.expander("🔧 Configure Pricing"):
