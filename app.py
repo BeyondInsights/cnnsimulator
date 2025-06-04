@@ -1,7 +1,7 @@
 import streamlit as st
 from openpyxl import load_workbook
 
-# ── 0. PAGE CONFIG ────────────────────────────────────────────────────────────
+# ── 0. PAAGE CONFIG ────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="CNN News Subscription Simulator",
     layout="wide",
