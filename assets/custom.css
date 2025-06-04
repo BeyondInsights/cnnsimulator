@@ -1,10 +1,9 @@
 /* ── A. GLOBAL & BASE STYLES ────────────────────────────────────────────────── */
 
-/* Light gray background for the entire app */
-body {
-    background-color: #fafafa;
-    color: #333;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+C:\SIMULATOR\cnnsimulator\assets\custom.css
+/* === TEST: turn main Streamlit container pale pink === */
+.stApp {
+  background-color: #ffeef0 !important;
 }
 
 /* App header (title + branding) */
