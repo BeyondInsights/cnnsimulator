@@ -12,7 +12,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 .app-title {
     font-size: 2rem;
@@ -45,12 +45,13 @@ hr, .stDivider {
 }
 
 /* ── B. TOP TOOLBAR & BUTTONS ──────────────────────────────────────────────── */
-/* Slight padding around the toolbar row */
+
+/* Padding around the toolbar */
 .css-1d391kg {
     padding: 0.5rem !important;
 }
 
-/* Style each toolbar button as a purple box with gold hover */
+/* Each toolbar button: BEYOND purple with BEYOND gold hover */
 .stButton > button {
     background-color: #6e1b9e !important; /* BEYOND purple */
     color: #fff !important;
@@ -70,18 +71,18 @@ hr, .stDivider {
 
 /* ── C. PRODUCT CARD LAYOUT ───────────────────────────────────────────────── */
 
-/* Each product column is a white “card” with a subtle shadow */
+/* Each product column is in a white “card” with a subtle shadow */
 .css-1lcbmhc > div {
     background-color: #fff;
     border: 2px solid #ddd;
     border-radius: 0.5rem;
     padding: 1rem;
-    margin: 0.3rem;
+    margin: 0.4rem;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
     position: relative;
 }
 
-/* Card header: boxed purple (if active) or gray (if inactive) */
+/* Card header: CNN Red (#cc0000) if active, or muted gray if inactive */
 .card-header {
     text-align: center;
     color: #fff;
@@ -89,10 +90,10 @@ hr, .stDivider {
     padding: 0.5rem 0;
     border-radius: 0.3rem 0.3rem 0 0;
     font-size: 1rem;
-    margin: -1rem -1rem 0.75rem -1rem;
+    margin: -1rem -1rem 0.5rem -1rem;
 }
 
-/* Muted body text when no base is selected */
+/* Muted body text when no base selected */
 .card-body-muted {
     color: #777;
     font-size: 0.9rem;
@@ -100,7 +101,7 @@ hr, .stDivider {
     padding: 1rem 0;
 }
 
-/* Exclude‐card overlay (semi‐transparent white + red text) */
+/* Overlay when “Exclude” is checked */
 .overlay {
     position: absolute;
     top: 0;
@@ -121,67 +122,100 @@ hr, .stDivider {
     font-weight: bold;
 }
 
-/* Section titles inside each card */
+/* Section titles inside cards (Features, Verticals, etc.) */
 .section-title {
     font-weight: bold;
     color: #333;
-    margin-top: 0.5rem;
+    margin-top: 0.6rem;
     margin-bottom: 0.3rem;
     font-size: 0.95rem;
+    padding-left: 0.2rem;
 }
 
-/* ── D. SELECTBOX & MULTISELECT STYLING ─────────────────────────────────────── */
+/* Counter under “Verticals” */
+.vertical-count {
+    font-size: 0.85rem;
+    color: #444;
+    margin-top: 0.2rem;
+    margin-bottom: 0.6rem;
+    text-align: right;
+    padding-right: 0.2rem;
+}
 
-/* Bigger click area, border, and padding for selectboxes */
-.stSelectbox > div,
+/* ── D. BASE-PRODUCT SELECTBOX ─────────────────────────────────────────────── */
+
+/* Make the base select bigger, with a red border so it’s pronounced */
+.stSelectbox > div {
+    border: 2px solid #cc0000 !important; /* CNN Red */
+    border-radius: 0.4rem !important;
+    background-color: #fff !important;
+    padding: 0.6rem 0.8rem !important;
+    font-size: 0.95rem !important;
+    margin-bottom: 0.4rem !important;
+}
+/* Large dropdown arrow in red */
+.stSelectbox svg {
+    color: #cc0000 !important;
+}
+
+/* ── E. “DISCOUNT” RADIO BUTTONS ────────────────────────────────────────────── */
+
+/* Radio buttons use default styling, but add a little extra margin */
+.stRadio > div {
+    margin-bottom: 0.6rem !important;
+}
+
+/* ── F. SELECTBOX & MULTISELECT STYLING ─────────────────────────────────────── */
+
+/* Bigger click area, border, padding for Multiselects */
 .stMultiSelect > div {
     border: 1px solid #bbb !important;
     border-radius: 0.3rem !important;
     background-color: #fafafa !important;
-    padding: 0.3rem 0.5rem !important;
+    padding: 0.4rem 0.6rem !important;
     font-size: 0.9rem !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0.6rem !important;
 }
-
-/* Dropdown arrow in purple */
-.stSelectbox svg,
+/* Dropdown arrow in BEYOND purple */
 .stMultiSelect svg {
-    color: #6e1b9e !important;  /* BEYOND purple */
+    color: #6e1b9e !important;
 }
 
-/* ── E. “CONFIGURE PRICING” EXPANDER ──────────────────────────────────────── */
+/* ── G. “CONFIGURE PRICING” EXPANDER ──────────────────────────────────────── */
 
 /* Gold‐bordered expander header */
 .stExpander > div[role="button"] {
-    border: 1px solid #dcae19 !important; /* BEYOND gold */
+    border: 2px solid #dcae19 !important; /* BEYOND gold */
     border-radius: 0.3rem !important;
     background-color: #fff !important;
-    padding: 0.4rem 0.6rem !important;
-    margin-bottom: 0.3rem !important;
+    padding: 0.5rem 0.8rem !important;
+    margin-bottom: 0.4rem !important;
 }
 .stExpanderHeader {
     font-weight: bold !important;
     color: #333 !important;
 }
 
-/* Expander content area with light gray background */
+/* Expander content area: slight gray background */
 .stExpanderContent {
     background-color: #f9f9f9 !important;
-    padding: 0.6rem 1rem !important;
+    padding: 0.8rem 1.2rem !important;
     border-radius: 0 0 0.3rem 0.3rem !important;
 }
 
-/* ── F. PRICE SLIDER & TEXT ───────────────────────────────────────────────── */
+/* ── H. PRICE SLIDER & TEXT ───────────────────────────────────────────────── */
 
-/* Slider track & thumb */
+/* Slider track (light gray) */
 input[type="range"]::-webkit-slider-runnable-track {
     background: #ddd;
 }
+/* Slider thumb in BEYOND gold */
 input[type="range"]::-webkit-slider-thumb {
     background: #dcae19; /* BEYOND gold */
     border: 2px solid #b78f17;
-    width: 1rem;
-    height: 1rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-top: -0.4rem; /* center inside track */
 }
 
 /* Price text styling */
@@ -190,6 +224,8 @@ input[type="range"]::-webkit-slider-thumb {
     font-weight: bold;
     color: #333;
     margin-top: 0.4rem;
+    margin-bottom: 0.6rem;
+    text-align: left;
 }
 .price-text span {
     display: inline-block;
@@ -202,12 +238,14 @@ input[type="range"]::-webkit-slider-thumb {
     text-align: center;
 }
 
-/* ── G. CHECKBOX ───────────────────────────────────────────────────────────── */
+/* ── I. CHECKBOX ───────────────────────────────────────────────────────────── */
+
+/* Add a bit of margin under each checkbox label */
 .stCheckbox > div {
-    margin: 0.3rem 0 !important;
+    margin: 0.4rem 0 !important;
 }
 
-/* ── H. FOOTER ─────────────────────────────────────────────────────────────── */
+/* ── J. FOOTER ─────────────────────────────────────────────────────────────── */
 .footer {
     text-align: center;
     color: #666;
